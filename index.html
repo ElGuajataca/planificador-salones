@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificador de Salones · Hotel El Guajataca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lago:#0e4a45;        /* verde profundo del Lago Guajataca */
+  --lago-claro:#1a6b62;
+  --arena:#f2ece1;       /* arena cálida */
+  --arena-osc:#e5dccb;
+  --oro:#b98a2f;         /* dorado hotelero */
+  --tinta:#22302e;
+  --blanco:#fdfcf9;
+  --rojo:#b0452f;
+  --linea:#d8cfbd;
+  font-size:15px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Outfit',sans-serif;
+  background:var(--arena);
+  color:var(--tinta);
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+/* ---------- CABECERA ---------- */
+header{
+  background:var(--lago);
+  color:var(--blanco);
+  padding:.65rem 1.2rem;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  flex-wrap:wrap;
+}
+.marca{display:flex;flex-direction:column;line-height:1.05}
+.marca .h{font-family:'Fraunces',serif;font-weight:700;font-size:1.25rem;letter-spacing:.02em}
+.marca .s{font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:#cfe3de}
+.rooms{display:flex;gap:.4rem;margin-left:auto;flex-wrap:wrap}
+.room-btn{
+  border:1px solid rgba(255,255,255,.35);
+  background:transparent;color:var(--blanco);
+  padding:.42rem .8rem;border-radius:2rem;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:500;
+  transition:background .15s,border-color .15s;
+}
+.room-btn small{display:block;font-size:.62rem;opacity:.75;font-weight:400}
+.room-btn.activo{background:var(--oro);border-color:var(--oro);color:#fff}
+.room-btn:hover:not(.activo){border-color:#fff}
+/* ---------- LAYOUT ---------- */
+main{flex:1;display:flex;min-height:0}
+aside{
+  width:265px;min-width:265px;background:var(--blanco);
+  border-right:1px solid var(--linea);
+  overflow-y:auto;padding:1rem .9rem;display:flex;flex-direction:column;gap:1.1rem;
+}
+.panel h3{
+  font-family:'Fraunces',serif;font-size:.95rem;font-weight:600;
+  color:var(--lago);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem;
+}
+.panel h3::after{content:"";flex:1;height:1px;background:var(--linea)}
+.campos{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.campos label{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:#7a746a;display:block;margin-bottom:.15rem}
+.campos input{
+  width:100%;border:1px solid var(--linea);border-radius:.4rem;
+  padding:.35rem .5rem;font-family:'Outfit',sans-serif;font-size:.82rem;background:#fff;
+}
+.campos .full{grid-column:1/-1}
+.paleta{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.pieza{
+  border:1px solid var(--linea);border-radius:.55rem;background:#fff;
+  padding:.5rem .4rem .45rem;cursor:pointer;text-align:center;
+  transition:border-color .15s, box-shadow .15s;
+}
+.pieza:hover{border-color:var(--oro);box-shadow:0 2px 8px rgba(185,138,47,.18)}
+.pieza svg{display:block;margin:0 auto .3rem}
+.pieza .n{font-size:.72rem;font-weight:500;line-height:1.15}
+.pieza .c{font-size:.62rem;color:#8a8478}
+.pieza .c.falta{color:var(--rojo);font-weight:600}
+.acciones{display:flex;flex-direction:column;gap:.4rem}
+.btn{
+  border:1px solid var(--lago);background:var(--lago);color:#fff;
+  border-radius:.5rem;padding:.5rem .7rem;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:500;
+  display:flex;align-items:center;justify-content:center;gap:.4rem;
+  transition:opacity .15s;
+}
+.btn:hover{opacity:.88}
+.btn.sec{background:#fff;color:var(--lago)}
+.btn.oro{background:var(--oro);border-color:var(--oro)}
+.btn.peligro{background:#fff;border-color:var(--rojo);color:var(--rojo)}
+.fila-btn{display:flex;gap:.4rem}
+.fila-btn .btn{flex:1;padding:.42rem .3rem;font-size:.75rem}
+select,#estilo{
+  width:100%;border:1px solid var(--linea);border-radius:.4rem;
+  padding:.4rem .5rem;font-family:'Outfit',sans-serif;font-size:.82rem;background:#fff;
+}
+/* ---------- LIENZO ---------- */
+.lienzo-wrap{flex:1;display:flex;flex-direction:column;min-width:0}
+.barra-estado{
+  display:flex;align-items:center;gap:1.2rem;padding:.5rem 1.2rem;
+  background:var(--blanco);border-bottom:1px solid var(--linea);flex-wrap:wrap;
+}
+.stat{display:flex;flex-direction:column;line-height:1.1}
+.stat .v{font-family:'Fraunces',serif;font-weight:700;font-size:1.15rem;color:var(--lago)}
+.stat .v.alerta{color:var(--rojo)}
+.stat .l{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:#8a8478}
+.aviso{margin-left:auto;font-size:.75rem;color:var(--rojo);font-weight:500;display:none}
+.aviso.on{display:block}
+.canvas-area{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:1.4rem;background:
+  repeating-linear-gradient(45deg,transparent 0 14px,rgba(14,74,69,.025) 14px 28px), var(--arena);}
+svg#plano{background:var(--blanco);border-radius:.4rem;box-shadow:0 6px 30px rgba(34,48,46,.14);touch-action:none;user-select:none}
+/* ---------- SELECCIÓN ---------- */
+.sel-tools{
+  display:none;gap:.35rem;align-items:center;
+  background:var(--tinta);border-radius:2rem;padding:.3rem .5rem;
+  position:absolute;z-index:20;box-shadow:0 4px 14px rgba(0,0,0,.3);
+}
+.sel-tools.on{display:flex}
+.sel-tools button{
+  background:transparent;border:none;color:#fff;cursor:pointer;
+  font-size:.9rem;padding:.25rem .45rem;border-radius:.35rem;
+}
+.sel-tools button:hover{background:rgba(255,255,255,.15)}
+.pie{
+  padding:.4rem 1.2rem;background:var(--blanco);border-top:1px solid var(--linea);
+  font-size:.68rem;color:#8a8478;display:flex;gap:1.5rem;flex-wrap:wrap;
+}
+.modo-presentacion aside,.modo-presentacion .pie{display:none}
+.modo-presentacion .barra-estado{justify-content:center}
+@media (max-width:840px){
+  aside{width:225px;min-width:225px}
+  .paleta{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="marca">
+    <span class="h">Hotel El Guajataca</span>
+    <span class="s">Planificador de salones y eventos</span>
+  </div>
+  <div class="rooms" id="rooms"></div>
+</header>
+
+<main>
+  <!-- ============ PANEL LATERAL ============ -->
+  <aside id="panel">
+    <div class="panel">
+      <h3>Evento</h3>
+      <div class="campos">
+        <div class="full"><label>Cliente</label><input id="fCliente" placeholder="Nombre del cliente"></div>
+        <div><label>Tipo</label><input id="fTipo" placeholder="Boda, corporativo…"></div>
+        <div><label>Fecha</label><input id="fFecha" type="date"></div>
+        <div class="full"><label>Invitados esperados</label><input id="fInvitados" type="number" min="1" value="100"></div>
+        <div class="full"><label>Silla del montaje (inventario)</label>
+          <select id="fSilla">
+            <option>Acero dorado + cojín blanco (YC-SS30) · 125 uds</option>
+            <option>Oval blanca + oro (YC-SS26) · 125 uds</option>
+            <option>Acrílica transparente (YC-A120) · 125 uds</option>
+            <option>Chiavari dorada (YC-A120G) · 125 uds</option>
+            <option>Mixta acrílica + dorada · 250 uds</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Montaje automático</h3>
+      <select id="estilo">
+        <option value="banquete">Banquete · mesas redondas</option>
+        <option value="banquete-imperial">Banquete + mesa cabecera</option>
+        <option value="teatro">Teatro · filas de sillas</option>
+        <option value="coctel">Cóctel · mesas altas</option>
+        <option value="u">Herradura (U) · corporativo</option>
+      </select>
+      <div style="height:.45rem"></div>
+      <button class="btn oro" id="btnAuto">✦ Generar montaje</button>
+    </div>
+
+    <div class="panel">
+      <h3>Añadir elementos</h3>
+      <div class="paleta" id="paleta"></div>
+    </div>
+
+    <div class="panel acciones">
+      <h3>Acciones</h3>
+      <button class="btn" id="btnPNG">⬇ Exportar plano (PNG)</button>
+      <button class="btn sec" id="btnPresentar">▣ Modo presentación</button>
+      <div class="fila-btn">
+        <button class="btn sec" id="btnGuardar">Guardar</button>
+        <button class="btn sec" id="btnCargar">Cargar</button>
+      </div>
+      <button class="btn peligro" id="btnLimpiar">✕ Vaciar salón</button>
+      <input type="file" id="fileCargar" accept=".json" hidden>
+    </div>
+  </aside>
+
+  <!-- ============ LIENZO ============ -->
+  <div class="lienzo-wrap">
+    <div class="barra-estado">
+      <div class="stat"><span class="v" id="stSentados">0</span><span class="l">Asientos sentados</span></div>
+      <div class="stat"><span class="v" id="stCoctel">0</span><span class="l">De pie / cóctel</span></div>
+      <div class="stat"><span class="v" id="stTotal">0</span><span class="l">Capacidad plano</span></div>
+      <div class="stat"><span class="v" id="stAforo">—</span><span class="l">Aforo máx. salón</span></div>
+      <div class="stat"><span class="v" id="stMesas">0</span><span class="l">Mesas</span></div>
+      <span class="aviso" id="avisoStock"></span>
+      <span class="aviso" id="aviso">⚠ El montaje excede el aforo del salón</span>
+    </div>
+    <div class="canvas-area" id="canvasArea">
+      <svg id="plano" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="pie">
+      <span>Arrastra los elementos para moverlos · Clic para seleccionar · Doble clic para rotar</span>
+      <span>Escala 1 m = cuadrícula</span>
+      <span id="pieSalon"></span>
+    </div>
+  </div>
+</main>
+
+<div class="sel-tools" id="selTools">
+  <button title="Rotar 45°" id="tRotar">⟳</button>
+  <button title="Duplicar" id="tDup">⧉</button>
+  <button title="Eliminar" id="tDel">🗑</button>
+</div>
+
+<script>
+/* ================= CONFIGURACIÓN DE SALONES =================
+   Cada salón se define por "zonas" (metros). La zona marcada
+   como principal:true es donde se genera el montaje automático.
+   Casabí: dos niveles alineados al lado derecho; la planta
+   baja es más larga hacia el lado izquierdo.                  */
+function Z(x,y,w,h,nombre,principal){return {x,y,w,h,nombre,principal:!!principal};}
+const SALONES = {
+  yaitii:{nombre:"Salón Yaitií", aforo:50, nota:"2 secciones",
+    dim:"Sección principal 30' × 15' · Anexo 15' × 8' (mismo nivel)",
+    zonas:[
+      Z(0, 0,    9.14, 4.57, "Sección principal · 30' × 15'", true),
+      Z(0, 4.57, 4.57, 2.44, "Anexo · 15' × 8'", false)
+    ]},
+  casabi:{nombre:"Salón Casabí", aforo:250, nota:"2 niveles",
+    dim:"Nivel bajo 67'3\" × 35'7\" (h 11') · Nivel superior 57'6\" × 15' (h 8'10\")",
+    escalera:{x:4.57, w:1.07}, // a 15' del lado izquierdo, ancho 3.5'
+    zonas:[
+      Z(0, 0,    17.53, 4.57, "Nivel superior · 57'6\" × 15' · techo 8'10\"", false),
+      Z(0, 5.37, 20.50, 10.85,"Nivel bajo · 67'3\" × 35'7\" · techo 11'", true)
+    ]},
+  azua:  {nombre:"Salón Asua", aforo:150, dim:"54' × 31'6\" (1,701 ft²)",
+    zonas:[Z(0,0,16.46,9.60,"",true)]},
+};
+function bboxSalon(s){let w=0,h=0;s.zonas.forEach(z=>{w=Math.max(w,z.x+z.w);h=Math.max(h,z.y+z.h)});return{w,h};}
+function zonaPrincipal(s){return s.zonas.find(z=>z.principal)||s.zonas[0];}
+
+/* ================= CATÁLOGO · INVENTARIO REAL DEL HOTEL =================
+   Basado en la orden YC-20240627MA. "stock" = unidades disponibles.
+   Elementos sin stock (pista, tarima, DJ) son de producción/alquiler.  */
+const TIPOS = {
+  redonda150:{n:"Mesa redonda 150 cm", forma:"circ", d:1.5, seats:10, cat:"sentado", stock:20, color:"#ffffff", borde:"#0e4a45"},
+  rect180:{n:"Mesa rect. 180×60 cm", forma:"rect", w:1.8, h:0.6, seats:8, cat:"sentado", stock:40, color:"#ffffff", borde:"#0e4a45"},
+  filaSillas:{n:"Fila de sillas ×10", forma:"rect", w:5, h:0.55, seats:10, cat:"sentado", color:"#e9efee", borde:"#1a6b62"},
+  coctel60:{n:"Mesa cóctel 60 cm (YC-T30)", forma:"circ", d:0.6, seats:6, cat:"pie", stock:10, color:"#eef4f3", borde:"#1a6b62"},
+  setLounge:{n:"Set lounge dorado 2+1", forma:"rect", w:1.4, h:0.7, seats:2, cat:"sentado", stock:2, color:"#fdf6e8", borde:"#b98a2f"},
+  sweetheart:{n:"Mesa novios YC-ST93 200×100", forma:"rect", w:2.0, h:1.0, seats:2, cat:"sentado", stock:1, unLado:true, color:"#fdf6e8", borde:"#b98a2f"},
+  serpentina:{n:"Mesa serpentina YC-T45", forma:"rect", w:2.14, h:0.76, seats:0, cat:"area", stock:4, color:"#f6efe0", borde:"#b98a2f"},
+  bizcocho:{n:"Mesa bizcocho 80 cm", forma:"circ", d:0.8, seats:0, cat:"area", stock:1, color:"#fdf6e8", borde:"#b98a2f"},
+  barraOro:{n:"Barra dorada 240 cm (YC-ST105)", forma:"rect", w:2.4, h:0.6, seats:0, cat:"area", stock:2, color:"#123f3b", borde:"#b98a2f", texto:"#fff"},
+  buffetPl:{n:"Mesa buffet plegable", forma:"rect", w:1.8, h:0.76, seats:0, cat:"area", stock:2, color:"#f6efe0", borde:"#b98a2f"},
+  backdrop320:{n:"Backdrop dorado 320 cm (YC-DP55)", forma:"rect", w:3.2, h:0.15, seats:0, cat:"area", stock:1, color:"#b98a2f", borde:"#8a6a20"},
+  backdrop360:{n:"Backdrop 360 cm PVC+acrílico", forma:"rect", w:3.6, h:0.15, seats:0, cat:"area", stock:1, color:"#e5dccb", borde:"#b98a2f"},
+  columnas:{n:"Columnas florales (YC-DP30)", forma:"rect", w:1.5, h:0.3, seats:0, cat:"area", stock:1, color:"#fdf6e8", borde:"#b98a2f"},
+  podio:{n:"Podio acrílico", forma:"rect", w:0.6, h:0.45, seats:0, cat:"area", stock:1, color:"#ffffff", borde:"#7a746a"},
+  pista:{n:"Pista de baile", forma:"rect", w:4.8, h:4.8, seats:0, cat:"area", color:"#efe6d2", borde:"#b98a2f", patron:true},
+  tarima:{n:"Tarima / escenario", forma:"rect", w:4.8, h:2.4, seats:0, cat:"area", color:"#dfd8c8", borde:"#7a746a"},
+  dj:{n:"Cabina DJ", forma:"rect", w:2, h:1, seats:0, cat:"area", color:"#2b2b2b", borde:"#111", texto:"#fff"},
+};
+
+/* ================= ESTADO ================= */
+let salonId = "casabi";
+let items = [];            // {id,tipo,x,y,rot,label}
+let nextId = 1;
+let selId = null;
+let escala = 40;           // px por metro (recalculado)
+const svg = document.getElementById("plano");
+const NS = "http://www.w3.org/2000/svg";
+
+/* ================= SELECTOR DE SALONES ================= */
+const roomsDiv = document.getElementById("rooms");
+Object.entries(SALONES).forEach(([id,s])=>{
+  const b = document.createElement("button");
+  b.className = "room-btn"+(id===salonId?" activo":"");
+  b.innerHTML = `${s.nombre}<small>hasta ${s.aforo} personas${s.nota?" · "+s.nota:""}</small>`;
+  b.onclick = ()=>{
+    salonId = id;
+    document.querySelectorAll(".room-btn").forEach(x=>x.classList.remove("activo"));
+    b.classList.add("activo");
+    selId = null;
+    render();
+  };
+  roomsDiv.appendChild(b);
+});
+
+/* ================= PALETA ================= */
+const paleta = document.getElementById("paleta");
+Object.entries(TIPOS).forEach(([id,t])=>{
+  const d = document.createElement("div");
+  d.className = "pieza";
+  const mini = t.forma==="circ"
+    ? `<svg width="34" height="26"><circle cx="17" cy="13" r="10" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6"/></svg>`
+    : `<svg width="34" height="26"><rect x="4" y="7" width="26" height="12" rx="2" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6"/></svg>`;
+  d.innerHTML = `${mini}<div class="n">${t.n}</div><div class="c" id="stk-${id}">${t.seats?t.seats+" pax":"—"}${t.stock?" · "+t.stock+" uds":""}</div>`;
+  d.onclick = ()=>agregar(id);
+  paleta.appendChild(d);
+});
+
+function agregar(tipo, x, y){
+  const s = SALONES[salonId], zp = zonaPrincipal(s), t = TIPOS[tipo];
+  const it = {id:nextId++, tipo, rot:0,
+    x: x!==undefined? x : zp.x + zp.w/2 + (Math.random()-0.5),
+    y: y!==undefined? y : zp.y + zp.h/2 + (Math.random()-0.5)};
+  items.push(it); selId = it.id; render();
+  return it;
+}
+
+/* ================= RENDER ================= */
+function render(){
+  const s = SALONES[salonId];
+  const bb = bboxSalon(s);
+  const area = document.getElementById("canvasArea");
+  const maxW = area.clientWidth - 60, maxH = area.clientHeight - 60;
+  escala = Math.max(16, Math.min(maxW/bb.w, maxH/bb.h));
+  const W = bb.w*escala, H = bb.h*escala;
+  svg.setAttribute("width",W); svg.setAttribute("height",H);
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML = "";
+
+  // dibujar cada zona/nivel: cuadrícula (1 m), borde y rótulo
+  s.zonas.forEach(z=>{
+    const zx=z.x*escala, zy=z.y*escala, zw=z.w*escala, zh=z.h*escala;
+    const g = el("g",{opacity:.55});
+    for(let i=1;i<z.w;i++) g.appendChild(el("line",{x1:zx+i*escala,y1:zy,x2:zx+i*escala,y2:zy+zh,stroke:"#eee6d6","stroke-width":1}));
+    for(let j=1;j<z.h;j++) g.appendChild(el("line",{x1:zx,y1:zy+j*escala,x2:zx+zw,y2:zy+j*escala,stroke:"#eee6d6","stroke-width":1}));
+    svg.appendChild(g);
+    svg.appendChild(el("rect",{x:zx+1.5,y:zy+1.5,width:zw-3,height:zh-3,fill:"none",stroke:"#0e4a45","stroke-width":3,rx:4}));
+    if(z.nombre){
+      const t = el("text",{x:zx+10,y:zy+Math.max(15,escala*.42),fill:"#0e4a45","font-family":"Outfit,sans-serif","font-size":Math.max(10,escala*.28),"font-weight":"500",opacity:.65});
+      t.textContent = z.nombre;
+      svg.appendChild(t);
+    }
+  });
+  // escalera que une los dos niveles (posición y ancho reales)
+  if(s.zonas.length>1 && s.escalera){
+    const a=s.zonas[0], b=s.zonas[1], e=s.escalera;
+    const ex=e.x*escala, ew=e.w*escala;
+    const y1=(a.y+a.h)*escala-3, y2=b.y*escala+3; // puente entre niveles
+    const gEsc = el("g",{});
+    gEsc.appendChild(el("rect",{x:ex,y:y1,width:ew,height:y2-y1,fill:"#f6efe0",stroke:"#b98a2f","stroke-width":2}));
+    const pel = 5; // peldaños
+    for(let i=1;i<pel;i++)
+      gEsc.appendChild(el("line",{x1:ex,y1:y1+(y2-y1)*i/pel,x2:ex+ew,y2:y1+(y2-y1)*i/pel,stroke:"#b98a2f","stroke-width":1.2}));
+    // flecha de sentido de subida
+    gEsc.appendChild(el("line",{x1:ex+ew/2,y1:y2-4,x2:ex+ew/2,y2:y1+4,stroke:"#b98a2f","stroke-width":1.5}));
+    svg.appendChild(gEsc);
+    const esc = el("text",{x:ex+ew+6,y:(y1+y2)/2+4,fill:"#b98a2f","font-family":"Outfit,sans-serif","font-size":Math.max(9,escala*.24)});
+    esc.textContent = "escalera 3'6\"";
+    svg.appendChild(esc);
+  }
+  const rot = el("text",{x:12,y:H-10,fill:"#0e4a45","font-family":"Fraunces,serif","font-size":Math.max(13,escala*.42),"font-weight":"600",opacity:.3});
+  rot.textContent = s.nombre;
+  svg.appendChild(rot);
+
+  // elementos
+  items.forEach(it=>dibujarItem(it));
+
+  actualizarStats();
+  posicionarTools();
+  document.getElementById("pieSalon").textContent = s.nombre + " · " + s.dim + " · aforo máx. " + s.aforo;
+}
+
+function el(tag,attrs){
+  const e = document.createElementNS(NS,tag);
+  for(const k in attrs) e.setAttribute(k,attrs[k]);
+  return e;
+}
+
+function dibujarItem(it){
+  const t = TIPOS[it.tipo];
+  const cx = it.x*escala, cy = it.y*escala;
+  const grp = el("g",{transform:`translate(${cx},${cy}) rotate(${it.rot})`,cursor:"grab","data-id":it.id});
+  const seleccionado = it.id===selId;
+
+  if(t.forma==="circ"){
+    const r = t.d/2*escala;
+    grp.appendChild(el("circle",{r, fill:t.color, stroke:seleccionado?"#b98a2f":t.borde,"stroke-width":seleccionado?3:1.8}));
+    // sillas alrededor de mesas con asientos
+    if(t.seats>0 && t.cat==="sentado"){
+      for(let i=0;i<t.seats;i++){
+        const a = i/t.seats*2*Math.PI;
+        grp.appendChild(el("circle",{cx:Math.cos(a)*(r+escala*.22), cy:Math.sin(a)*(r+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
+      }
+    }
+  } else {
+    const w = t.w*escala, h = t.h*escala;
+    grp.appendChild(el("rect",{x:-w/2,y:-h/2,width:w,height:h,rx:3,fill:t.color,stroke:seleccionado?"#b98a2f":t.borde,"stroke-width":seleccionado?3:1.8}));
+    if(t.patron){ // pista de baile: tablones diagonales
+      for(let i=-w;i<w;i+=escala*.5)
+        grp.appendChild(el("line",{x1:Math.max(-w/2,i),y1:h/2,x2:Math.min(w/2,i+h),y2:Math.max(-h/2,h/2-(Math.min(w/2,i+h)-Math.max(-w/2,i))),stroke:"#b98a2f","stroke-width":1,opacity:.25}));
+    }
+    if(t.seats>0 && it.tipo!=="filaSillas" && t.cat==="sentado"){
+      if(t.unLado){ // ambas sillas del mismo lado (mesa de novios, de frente a los invitados)
+        for(let i=0;i<t.seats;i++){
+          const px = -w/2 + w*(i+.5)/t.seats;
+          grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
+        }
+      } else {
+        const porLado = Math.ceil(t.seats/2);
+        for(let i=0;i<porLado;i++){
+          const px = -w/2 + w*(i+.5)/porLado;
+          grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
+          if(i + porLado < t.seats)
+            grp.appendChild(el("circle",{cx:px,cy:h/2+escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
+        }
+      }
+    }
+    if(it.tipo==="filaSillas"){
+      for(let i=0;i<t.seats;i++)
+        grp.appendChild(el("rect",{x:-w/2+i*(w/t.seats)+2,y:-h/2+2,width:w/t.seats-4,height:h-4,rx:2,fill:"#fff",stroke:t.borde,"stroke-width":1}));
+    }
+  }
+  // etiqueta
+  const label = el("text",{y:4,"text-anchor":"middle","font-family":"Outfit,sans-serif","font-size":Math.max(8,escala*.24),fill:t.texto||"#22302e","font-weight":"500","pointer-events":"none"});
+  label.textContent = it.label || (t.seats? t.seats+" pax" : t.n.split(" ")[0]);
+  grp.appendChild(label);
+
+  // interacción
+  grp.addEventListener("pointerdown", e=>iniciarDrag(e,it));
+  grp.addEventListener("dblclick", ()=>{ it.rot=(it.rot+45)%360; render(); });
+  svg.appendChild(grp);
+}
+
+/* ================= DRAG ================= */
+let drag = null;
+function iniciarDrag(e,it){
+  e.preventDefault();
+  selId = it.id;
+  const pt = coords(e);
+  drag = {it, dx:pt.x-it.x, dy:pt.y-it.y};
+  render();
+}
+svg.addEventListener("pointermove", e=>{
+  if(!drag) return;
+  const bb = bboxSalon(SALONES[salonId]), pt = coords(e);
+  drag.it.x = Math.min(bb.w-0.3, Math.max(0.3, pt.x-drag.dx));
+  drag.it.y = Math.min(bb.h-0.3, Math.max(0.3, pt.y-drag.dy));
+  render();
+});
+window.addEventListener("pointerup", ()=>{ drag=null; });
+svg.addEventListener("pointerdown", e=>{
+  if(e.target===svg || e.target.tagName==="line" || (e.target.tagName==="rect" && !e.target.parentNode.dataset?.id)){
+    selId=null; render();
+  }
+});
+function coords(e){
+  const r = svg.getBoundingClientRect();
+  return {x:(e.clientX-r.left)/escala, y:(e.clientY-r.top)/escala};
+}
+
+/* ================= HERRAMIENTAS DE SELECCIÓN ================= */
+const tools = document.getElementById("selTools");
+function posicionarTools(){
+  const it = items.find(i=>i.id===selId);
+  if(!it){ tools.classList.remove("on"); return; }
+  const r = svg.getBoundingClientRect();
+  tools.classList.add("on");
+  tools.style.left = (r.left + it.x*escala - 45) + "px";
+  tools.style.top  = (r.top + it.y*escala - 62) + "px";
+}
+document.getElementById("tRotar").onclick = ()=>{ const it=items.find(i=>i.id===selId); if(it){it.rot=(it.rot+45)%360; render();} };
+document.getElementById("tDup").onclick = ()=>{
+  const it=items.find(i=>i.id===selId);
+  if(it){ const c={...it,id:nextId++,x:it.x+0.7,y:it.y+0.7}; items.push(c); selId=c.id; render(); }
+};
+document.getElementById("tDel").onclick = ()=>{ items=items.filter(i=>i.id!==selId); selId=null; render(); };
+window.addEventListener("keydown", e=>{
+  if((e.key==="Delete"||e.key==="Backspace") && selId && document.activeElement.tagName!=="INPUT"){
+    items=items.filter(i=>i.id!==selId); selId=null; render();
+  }
+});
+
+/* ================= ESTADÍSTICAS ================= */
+function actualizarStats(){
+  const s = SALONES[salonId];
+  let sent=0, pie=0, mesas=0;
+  const uso = {};
+  items.forEach(it=>{
+    const t=TIPOS[it.tipo];
+    uso[it.tipo]=(uso[it.tipo]||0)+1;
+    if(t.cat==="sentado"){ sent+=t.seats; if(it.tipo!=="filaSillas") mesas++; }
+    if(t.cat==="pie"){ pie+=t.seats; mesas++; }
+  });
+  const total = sent+pie;
+  document.getElementById("stSentados").textContent = sent;
+  document.getElementById("stCoctel").textContent = pie;
+  document.getElementById("stTotal").textContent = total;
+  document.getElementById("stAforo").textContent = s.aforo;
+  document.getElementById("stMesas").textContent = mesas;
+  const excede = total>s.aforo;
+  document.getElementById("stTotal").classList.toggle("alerta",excede);
+  document.getElementById("aviso").classList.toggle("on",excede);
+
+  // inventario: contadores por tipo + aviso de alquiler
+  const faltas = [];
+  Object.entries(TIPOS).forEach(([id,t])=>{
+    const el = document.getElementById("stk-"+id);
+    if(!el) return;
+    const u = uso[id]||0;
+    if(t.stock){
+      el.textContent = (t.seats?t.seats+" pax · ":"") + u + "/" + t.stock + " uds";
+      const falta = u>t.stock;
+      el.classList.toggle("falta",falta);
+      if(falta) faltas.push((u-t.stock)+" "+t.n.split("(")[0].trim().toLowerCase());
+    } else {
+      el.textContent = (t.seats?t.seats+" pax":"—") + (t.cat==="area"&&!t.stock?" · alquiler":"");
+    }
+  });
+  const av = document.getElementById("avisoStock");
+  if(faltas.length){ av.textContent = "⚠ Alquilar: "+faltas.join(", "); av.classList.add("on"); }
+  else { av.textContent=""; av.classList.remove("on"); }
+}
+
+/* ================= MONTAJE AUTOMÁTICO ================= */
+document.getElementById("btnAuto").onclick = ()=>{
+  const pax = parseInt(document.getElementById("fInvitados").value)||100;
+  const estilo = document.getElementById("estilo").value;
+  const s = SALONES[salonId];
+  const z = zonaPrincipal(s);
+  const sec = s.zonas.find(zn=>!zn.principal); // nivel superior (Casabí)
+  items = []; selId=null;
+
+  if(estilo==="banquete" || estilo==="banquete-imperial"){
+    let restante = pax, yIni;
+    const chico = z.h < 6; // salones poco profundos (Yaitií)
+    if(estilo==="banquete-imperial"){
+      agregar("rect180", z.x+z.w/2-0.9, z.y+(chico?1.0:1.2));
+      agregar("rect180", z.x+z.w/2+0.9, z.y+(chico?1.0:1.2));
+      if(!chico) agregar("backdrop320", z.x+z.w/2, z.y+0.35);
+      restante -= 16; yIni = chico?2.2:3.0;
+    } else {
+      agregar("sweetheart", z.x+z.w/2, z.y+(chico?1.0:1.2));
+      if(!chico) agregar("backdrop320", z.x+z.w/2, z.y+0.35);
+      restante -= 2; yIni = chico?2.1:2.6;
+    }
+    if(z.w>=10){
+      agregar("pista", z.x+z.w/2, z.y+z.h/2);
+      agregar("dj", z.x+z.w-1.6, z.y+1.2);
+      agregar("bizcocho", z.x+1.2, z.y+1.2);
+      if(!sec) agregar("barraOro", z.x+2.5, z.y+z.h-1);
+    }
+    // redondas 150 cm hasta agotar stock; el resto en rectangulares 180×60
+    const nNec = Math.ceil(restante/TIPOS.redonda150.seats);
+    const nRed = Math.min(nNec, TIPOS.redonda150.stock);
+    const r1 = colocarMesas("redonda150", nRed, z, yIni, z.w>=10);
+    const sentados = r1.colocadas*TIPOS.redonda150.seats;
+    if(restante > sentados){
+      const nRect = Math.ceil((restante-sentados)/TIPOS.rect180.seats);
+      colocarMesas("rect180", nRect, z, r1.siguienteY, z.w>=10);
+    }
+    if(sec){
+      if(sec.w>=10){ // nivel superior Casabí: lounge completo
+        agregar("barraOro", sec.x+2.2, sec.y+sec.h/2);
+        agregar("setLounge", sec.x+5, sec.y+sec.h/2);
+        agregar("setLounge", sec.x+7.2, sec.y+sec.h/2);
+        for(let i=0;i<3;i++) agregar("coctel60", sec.x+9.5+i*2.2, sec.y+sec.h/2);
+        agregar("buffetPl", sec.x+sec.w-1.6, sec.y+sec.h/2).rot=90;
+      } else { // anexo pequeño Yaitií: estación de servicio
+        agregar("buffetPl", sec.x+sec.w/2-0.9, sec.y+sec.h/2);
+        agregar("bizcocho", sec.x+sec.w-0.7, sec.y+sec.h/2);
+      }
+    }
+  }
+  else if(estilo==="teatro"){
+    const chico = z.h < 6;
+    if(chico){
+      agregar("podio", z.x+z.w/2, z.y+0.8);
+    } else {
+      agregar("tarima", z.x+z.w/2, z.y+1.6);
+      agregar("podio", z.x+z.w/2-3.2, z.y+1.6);
+    }
+    const filas = Math.ceil(pax/10);
+    const inicioY = z.y+(chico?1.8:3.4), sep = 0.95;
+    for(let f=0; f<filas; f++){
+      const y = inicioY + f*sep;
+      if(y > z.y+z.h-0.6) break;
+      agregar("filaSillas", z.x+z.w/2, y);
+    }
+    if(sec && sec.w<10){ agregar("buffetPl", sec.x+sec.w/2, sec.y+sec.h/2); }
+  }
+  else if(estilo==="coctel"){
+    const nMesas = Math.ceil(pax/TIPOS.coctel60.seats);
+    agregar("barraOro", z.x+z.w/2, z.y+1);
+    if(z.w>=10){
+      agregar("buffetPl", z.x+z.w-1.6, z.y+z.h/2).rot=90;
+      agregar("serpentina", z.x+2, z.y+z.h/2).rot=90;
+    }
+    let abajo = nMesas;
+    if(sec && sec.w>=6){ // nivel superior amplio: reparte el cóctel
+      const arriba = Math.min(Math.floor(nMesas*0.3), Math.floor((sec.w-3)/1.8));
+      abajo = nMesas - arriba;
+      agregar("barraOro", sec.x+2.2, sec.y+sec.h/2);
+      for(let i=0;i<arriba;i++) agregar("coctel60", sec.x+4.6+i*1.8, sec.y+sec.h/2);
+    } else if(sec){ // anexo pequeño: buffet
+      agregar("buffetPl", sec.x+sec.w/2, sec.y+sec.h/2);
+    }
+    colocarMesas("coctel60", abajo, z, 2.4, false);
+  }
+  else if(estilo==="u"){
+    agregar("tarima", z.x+z.w/2, z.y+1.4);
+    agregar("podio", z.x+z.w/2-3.2, z.y+1.4);
+    const largo = Math.min(z.w-4, z.h-4);
+    const nLat = Math.floor(largo/2.0);
+    for(let i=0;i<nLat;i++){
+      agregar("rect180", z.x+2.2, z.y+3.2+i*2.0).rot=90;
+      agregar("rect180", z.x+z.w-2.2, z.y+3.2+i*2.0).rot=90;
+    }
+    const nFondo = Math.floor((z.w-5)/2.0);
+    for(let i=0;i<nFondo;i++) agregar("rect180", z.x+2.8+1.0+i*2.0, z.y+z.h-1.6);
+  }
+  selId=null; render();
+};
+
+function colocarMesas(tipo, n, z, inicioY, evitarCentro){
+  const t = TIPOS[tipo];
+  const diam = (t.d||Math.max(t.w,t.h)) + (t.cat==="sentado"?1.0:0.7); // espacio con sillas + pasillo
+  const cols = Math.max(1, Math.floor((z.w-1.2)/diam));
+  let colocadas=0, fila=0;
+  const cx0 = z.x+z.w/2, cy0 = z.y+z.h/2, pista = 3.1; // radio de exclusión de la pista
+  while(colocadas<n){
+    const y = z.y + inicioY + diam/2 + fila*diam;
+    if(y > z.y+z.h-0.8){ break; }
+    for(let c=0;c<cols && colocadas<n;c++){
+      const x = z.x + (z.w - cols*diam)/2 + diam/2 + c*diam;
+      if(evitarCentro && Math.hypot(x-cx0,y-cy0) < pista){ continue; }
+      agregar(tipo, x, y);
+      colocadas++;
+    }
+    fila++;
+    if(fila>40) break;
+  }
+  return {colocadas, siguienteY: inicioY + (fila)*diam + diam*0.1};
+}
+
+/* ================= EXPORTAR PNG ================= */
+document.getElementById("btnPNG").onclick = ()=>{
+  const s = SALONES[salonId];
+  const cliente = document.getElementById("fCliente").value || "Cliente";
+  const tipo = document.getElementById("fTipo").value || "Evento";
+  const fecha = document.getElementById("fFecha").value || "";
+  const pax = document.getElementById("fInvitados").value || "";
+
+  const W = parseFloat(svg.getAttribute("width")), H = parseFloat(svg.getAttribute("height"));
+  const margen = 40, cabecera = 96;
+  const canvas = document.createElement("canvas");
+  const k = 2; // resolución 2x
+  canvas.width = (W+margen*2)*k; canvas.height = (H+margen*2+cabecera)*k;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(k,k);
+  ctx.fillStyle = "#fdfcf9"; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  // bloque de título estilo plano arquitectónico
+  ctx.fillStyle = "#0e4a45";
+  ctx.fillRect(0,0,W+margen*2,cabecera-18);
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 24px Fraunces, serif";
+  ctx.fillText("Hotel El Guajataca", margen, 34);
+  ctx.font = "400 13px Outfit, sans-serif";
+  ctx.fillStyle = "#cfe3de";
+  ctx.fillText(s.nombre + "  ·  " + s.dim + "  ·  Aforo " + s.aforo, margen, 56);
+  ctx.textAlign = "right";
+  ctx.fillStyle = "#fff";
+  ctx.font = "500 15px Outfit, sans-serif";
+  ctx.fillText(cliente + "  —  " + tipo, W+margen, 34);
+  ctx.font = "400 12px Outfit, sans-serif";
+  ctx.fillStyle = "#cfe3de";
+  ctx.fillText((fecha?("Fecha: "+fecha+"   "):"") + (pax?("Invitados: "+pax+"   "):"") + "Sillas: " + document.getElementById("fSilla").value.split("·")[0].trim(), W+margen, 56);
+  ctx.textAlign = "left";
+
+  const data = new XMLSerializer().serializeToString(svg);
+  const img = new Image();
+  img.onload = ()=>{
+    ctx.drawImage(img, margen, cabecera, W, H);
+    ctx.strokeStyle = "#d8cfbd";
+    ctx.strokeRect(margen-.5, cabecera-.5, W+1, H+1);
+    const a = document.createElement("a");
+    a.download = ("plano-"+s.nombre+"-"+(cliente||"evento")).toLowerCase().replace(/\s+/g,"-")+".png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  };
+  img.src = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(data);
+};
+
+/* ================= GUARDAR / CARGAR ================= */
+document.getElementById("btnGuardar").onclick = ()=>{
+  const data = {salonId, items, evento:{
+    cliente:fCliente.value, tipo:fTipo.value, fecha:fFecha.value, invitados:fInvitados.value}};
+  const a = document.createElement("a");
+  a.download = "montaje-"+SALONES[salonId].nombre.toLowerCase().replace(/\s+/g,"-")+".json";
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:"application/json"}));
+  a.click();
+};
+document.getElementById("btnCargar").onclick = ()=>fileCargar.click();
+document.getElementById("fileCargar").onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const d = JSON.parse(r.result);
+      salonId = d.salonId in SALONES ? d.salonId : salonId;
+      items = (d.items||[]).filter(i=>TIPOS[i.tipo]);
+      nextId = Math.max(1,...items.map(i=>i.id+1));
+      if(d.evento){ fCliente.value=d.evento.cliente||""; fTipo.value=d.evento.tipo||""; fFecha.value=d.evento.fecha||""; fInvitados.value=d.evento.invitados||100; }
+      document.querySelectorAll(".room-btn").forEach((b,idx)=>b.classList.toggle("activo",Object.keys(SALONES)[idx]===salonId));
+      selId=null; render();
+    }catch(err){ alert("Archivo no válido."); }
+  };
+  r.readAsText(f);
+  e.target.value = "";
+};
+
+/* ================= OTROS ================= */
+document.getElementById("btnLimpiar").onclick = ()=>{ if(confirm("¿Vaciar el salón?")){ items=[]; selId=null; render(); } };
+document.getElementById("btnPresentar").onclick = function(){
+  document.body.classList.toggle("modo-presentacion");
+  this.textContent = document.body.classList.contains("modo-presentacion") ? "▣ Salir de presentación" : "▣ Modo presentación";
+  selId=null;
+  setTimeout(render,60);
+};
+window.addEventListener("resize", ()=>render());
+
+/* montaje inicial de demostración */
+document.getElementById("fInvitados").value = 120;
+document.getElementById("btnAuto").click();
+</script>
+</body>
+</html>
