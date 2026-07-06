@@ -258,11 +258,14 @@ const SALONES = {
      en sitio antes de trabajos de construcción.                     */
   azua:  {nombre:"Salón Asua", aforo:170, nota:"forma irregular",
     dim:"2,600 ft² (útil ~2,210) · Banquete ~170 · Cóctel ~276 · Teatro ~315",
+    // contorno exterior continuo (metros) — el interior es un solo espacio
+    contorno:[[0,0.91],[5.54,0.91],[5.54,4.39],[12.93,4.39],[12.93,0],
+              [17.35,0],[17.35,16.76],[7.70,16.76],[7.70,15.24],[0,15.24]],
     zonas:[
-      Z(0,     4.39, 17.35, 10.85, "Área principal · 56'11\" × 35'7\"", true),
-      Z(0,     0.91,  5.54,  3.48, "Front desk · 18'2\" × 11'5\"", false),
-      Z(12.93, 0,     4.42,  4.39, "Ala derecha · 14'6\" × 14'5\"", false),
-      Z(7.70, 15.24,  9.65,  1.52, "Entrada · 31'8\" × 5'", false)
+      Z(0,     4.39, 17.35, 10.85, "", true),
+      Z(0,     0.91,  5.54,  3.48, "Front desk", false),
+      Z(12.93, 0,     4.42,  4.39, "", false),
+      Z(7.70, 15.24,  9.65,  1.52, "Entrada", false)
     ]},
 };
 function bboxSalon(s){let w=0,h=0;s.zonas.forEach(z=>{w=Math.max(w,z.x+z.w);h=Math.max(h,z.y+z.h)});return{w,h};}
@@ -346,10 +349,31 @@ function render(){
   const maxW = area.clientWidth - 60, maxH = area.clientHeight - 60;
   escala = Math.max(16, Math.min(maxW/bb.w, maxH/bb.h));
   const W = bb.w*escala, H = bb.h*escala;
-  svg.setAttribute("width",W); svg.setAttribute("height",H);
-  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.setAttribute("width",W+4); svg.setAttribute("height",H+4);
+  svg.setAttribute("viewBox",`-2 -2 ${W+4} ${H+4}`);
   svg.innerHTML = "";
 
+  if(s.contorno){
+    // salón de contorno continuo: cuadrícula global recortada al polígono
+    // y un solo borde exterior, sin divisiones interiores
+    const pts = s.contorno.map(p=>`${p[0]*escala},${p[1]*escala}`).join(" ");
+    const defs = el("defs",{});
+    const clip = el("clipPath",{id:"clipSalon"});
+    clip.appendChild(el("polygon",{points:pts}));
+    defs.appendChild(clip);
+    svg.appendChild(defs);
+    const g = el("g",{opacity:.55,"clip-path":"url(#clipSalon)"});
+    for(let i=1;i<bb.w;i++) g.appendChild(el("line",{x1:i*escala,y1:0,x2:i*escala,y2:H,stroke:"#eee6d6","stroke-width":1}));
+    for(let j=1;j<bb.h;j++) g.appendChild(el("line",{x1:0,y1:j*escala,x2:W,y2:j*escala,stroke:"#eee6d6","stroke-width":1}));
+    svg.appendChild(g);
+    svg.appendChild(el("polygon",{points:pts,fill:"none",stroke:"#0e4a45","stroke-width":3,"stroke-linejoin":"round"}));
+    s.zonas.forEach(z=>{
+      if(!z.nombre) return;
+      const t = el("text",{x:z.x*escala+10,y:z.y*escala+Math.max(15,escala*.42),fill:"#0e4a45","font-family":"Outfit,sans-serif","font-size":Math.max(10,escala*.28),"font-weight":"500",opacity:.65});
+      t.textContent = z.nombre;
+      svg.appendChild(t);
+    });
+  } else {
   // dibujar cada zona/nivel: cuadrícula (1 m), borde y rótulo
   s.zonas.forEach(z=>{
     const zx=z.x*escala, zy=z.y*escala, zw=z.w*escala, zh=z.h*escala;
@@ -364,6 +388,7 @@ function render(){
       svg.appendChild(t);
     }
   });
+  }
   // escalera que une los dos niveles (posición y ancho reales)
   if(s.zonas.length>1 && s.escalera){
     const a=s.zonas[0], b=s.zonas[1], e=s.escalera;
@@ -478,7 +503,7 @@ svg.addEventListener("pointerdown", e=>{
 });
 function coords(e){
   const r = svg.getBoundingClientRect();
-  return {x:(e.clientX-r.left)/escala, y:(e.clientY-r.top)/escala};
+  return {x:(e.clientX-r.left-2)/escala, y:(e.clientY-r.top-2)/escala}; // -2: margen del viewBox
 }
 
 /* ================= HERRAMIENTAS DE SELECCIÓN ================= */
