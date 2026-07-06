@@ -12,7 +12,8 @@ Herramienta interactiva para diseñar y presentar montajes de eventos a clientes
 
 ## Funciones
 
-- **Montaje automático** — banquete, banquete + cabecera, teatro, cóctel y herradura (U), generados según el número de invitados.
+- **Montaje automático** — banquete, banquete + cabecera, teatro, cóctel y herradura (U), generados según el número de invitados. En banquete se elige cuántas personas van por mesa (10, 8 o 6) y el número de mesas se calcula solo.
+- **Personas por mesa editable mesa a mesa** — al seleccionar una mesa, la barra flotante tiene un selector de 10/8/6 pax; las sillas dibujadas, la etiqueta y el conteo de aforo se ajustan al instante.
 - **Inventario real integrado** (orden YC-20240627MA) — 20 mesas redondas 150 cm, 40 rectangulares 180×60, 10 cóctel, mesa de novios, serpentinas, barras doradas, backdrops, etc. Con contador de uso por pieza y **alerta roja de alquiler** cuando un montaje excede el stock.
 - **Selector de silla** — YC-SS30, YC-SS26, acrílica YC-A120 o chiavari dorada YC-A120G; queda impreso en el plano.
 - **Control de aforo en vivo** — asientos sentados, cóctel de pie y alerta si se excede el máximo del salón.

@@ -132,6 +132,12 @@ svg#plano{background:var(--blanco);border-radius:.4rem;box-shadow:0 6px 30px rgb
   width:74px;border:none;border-radius:1rem;padding:.22rem .55rem;
   font-family:'Outfit',sans-serif;font-size:.75rem;background:rgba(255,255,255,.92);
 }
+.sel-tools select{
+  width:auto;border:none;border-radius:1rem;padding:.22rem .35rem;
+  font-family:'Outfit',sans-serif;font-size:.75rem;background:rgba(255,255,255,.92);
+  display:none;
+}
+.sel-tools select.on{display:block}
 /* ---------- EDITORES ---------- */
 .h3-btn{
   border:1px solid var(--linea);background:#fff;color:var(--lago);
@@ -219,6 +225,14 @@ svg#plano{background:var(--blanco);border-radius:.4rem;box-shadow:0 6px 30px rgb
         <select id="estilo" style="flex:1;min-width:0"></select>
         <button class="h3-btn" id="btnEstiloBorrar" title="Eliminar este estilo propio" style="display:none">🗑</button>
       </div>
+      <div class="campos" style="margin-top:.45rem"><div class="full">
+        <label>Personas por mesa (banquete)</label>
+        <select id="fPorMesa">
+          <option value="10">10 por mesa</option>
+          <option value="8">8 por mesa</option>
+          <option value="6">6 por mesa</option>
+        </select>
+      </div></div>
       <div style="height:.45rem"></div>
       <button class="btn oro" id="btnAuto">✦ Generar montaje</button>
       <div style="height:.35rem"></div>
@@ -267,6 +281,7 @@ svg#plano{background:var(--blanco);border-radius:.4rem;box-shadow:0 6px 30px rgb
 
 <div class="sel-tools" id="selTools">
   <input id="tLabel" placeholder="nº mesa" title="Número o etiqueta de la mesa (se imprime en el plano)">
+  <select id="tSeats" title="Personas en esta mesa"></select>
   <button title="Rotar 45°" id="tRotar">⟳</button>
   <button title="Duplicar" id="tDup">⧉</button>
   <button title="Eliminar" id="tDel">🗑</button>
@@ -735,6 +750,7 @@ function el(tag,attrs){
 function dibujarItem(it){
   const t = TIPOS[it.tipo];
   if(!t) return; // pieza personalizada eliminada
+  const nSeats = it.seats || t.seats; // asientos de ESTA mesa (editable por mesa)
   const cx = it.x*escala, cy = it.y*escala;
   const grp = el("g",{transform:`translate(${cx},${cy}) rotate(${it.rot})`,cursor:"grab","data-id":it.id});
   const seleccionado = it.id===selId;
@@ -743,9 +759,9 @@ function dibujarItem(it){
     const r = t.d/2*escala;
     grp.appendChild(el("circle",{r, fill:t.color, stroke:seleccionado?"#b98a2f":t.borde,"stroke-width":seleccionado?3:1.8}));
     // sillas alrededor de mesas con asientos
-    if(t.seats>0 && t.cat==="sentado"){
-      for(let i=0;i<t.seats;i++){
-        const a = i/t.seats*2*Math.PI;
+    if(nSeats>0 && t.cat==="sentado"){
+      for(let i=0;i<nSeats;i++){
+        const a = i/nSeats*2*Math.PI;
         grp.appendChild(el("circle",{cx:Math.cos(a)*(r+escala*.22), cy:Math.sin(a)*(r+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
       }
     }
@@ -755,9 +771,9 @@ function dibujarItem(it){
     grp.appendChild(el("path",{
       d:`M ${-R} ${dy} A ${R} ${R} 0 0 1 ${R} ${dy} L ${ri} ${dy} A ${ri} ${ri} 0 0 0 ${-ri} ${dy} Z`,
       fill:t.color, stroke:seleccionado?"#b98a2f":t.borde,"stroke-width":seleccionado?3:1.8,"stroke-linejoin":"round"}));
-    if(t.seats>0 && t.cat==="sentado"){ // sillas por el arco exterior
-      for(let i=0;i<t.seats;i++){
-        const a = Math.PI + (i+0.5)/t.seats*Math.PI;
+    if(nSeats>0 && t.cat==="sentado"){ // sillas por el arco exterior
+      for(let i=0;i<nSeats;i++){
+        const a = Math.PI + (i+0.5)/nSeats*Math.PI;
         grp.appendChild(el("circle",{cx:Math.cos(a)*(R+escala*.22), cy:dy+Math.sin(a)*(R+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
       }
     }
@@ -768,18 +784,18 @@ function dibujarItem(it){
       for(let i=-w;i<w;i+=escala*.5)
         grp.appendChild(el("line",{x1:Math.max(-w/2,i),y1:h/2,x2:Math.min(w/2,i+h),y2:Math.max(-h/2,h/2-(Math.min(w/2,i+h)-Math.max(-w/2,i))),stroke:"#b98a2f","stroke-width":1,opacity:.25}));
     }
-    if(t.seats>0 && it.tipo!=="filaSillas" && t.cat==="sentado"){
+    if(nSeats>0 && it.tipo!=="filaSillas" && t.cat==="sentado"){
       if(t.unLado){ // ambas sillas del mismo lado (mesa de novios, de frente a los invitados)
-        for(let i=0;i<t.seats;i++){
-          const px = -w/2 + w*(i+.5)/t.seats;
+        for(let i=0;i<nSeats;i++){
+          const px = -w/2 + w*(i+.5)/nSeats;
           grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
         }
       } else {
-        const porLado = Math.ceil(t.seats/2);
+        const porLado = Math.ceil(nSeats/2);
         for(let i=0;i<porLado;i++){
           const px = -w/2 + w*(i+.5)/porLado;
           grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
-          if(i + porLado < t.seats)
+          if(i + porLado < nSeats)
             grp.appendChild(el("circle",{cx:px,cy:h/2+escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
         }
       }
@@ -791,7 +807,7 @@ function dibujarItem(it){
   }
   // etiqueta
   const label = el("text",{y:4,"text-anchor":"middle","font-family":"Outfit,sans-serif","font-size":Math.max(8,escala*.24),fill:t.texto||"#22302e","font-weight":"500","pointer-events":"none"});
-  label.textContent = it.label || (t.seats? t.seats+" pax" : t.n.split(" ")[0]);
+  label.textContent = it.label || (nSeats? nSeats+" pax" : t.n.split(" ")[0]);
   grp.appendChild(label);
 
   // interacción
@@ -830,6 +846,7 @@ function coords(e){
 /* ================= HERRAMIENTAS DE SELECCIÓN ================= */
 const tools = document.getElementById("selTools");
 const tLabel = document.getElementById("tLabel");
+const tSeats = document.getElementById("tSeats");
 function posicionarTools(){
   const it = items.find(i=>i.id===selId);
   if(!it){ tools.classList.remove("on"); return; }
@@ -838,7 +855,21 @@ function posicionarTools(){
   tools.style.left = (r.left + it.x*escala - 78) + "px";
   tools.style.top  = (r.top + it.y*escala - 62) + "px";
   if(document.activeElement !== tLabel) tLabel.value = it.label || "";
+  // selector de personas por mesa (solo mesas de banquete)
+  const t = TIPOS[it.tipo];
+  const esMesa = t && t.cat==="sentado" && t.seats>=6 && it.tipo!=="filaSillas" && !t.unLado;
+  tSeats.classList.toggle("on", esMesa);
+  if(esMesa){
+    const actual = it.seats || t.seats;
+    const ops = [...new Set([10,8,6,t.seats,actual])].sort((a,b)=>b-a);
+    tSeats.innerHTML = ops.map(v=>`<option value="${v}">${v} pax</option>`).join("");
+    tSeats.value = String(actual);
+  }
 }
+tSeats.addEventListener("change", ()=>{
+  const it = items.find(i=>i.id===selId);
+  if(it){ it.seats = parseInt(tSeats.value); render(); }
+});
 tLabel.addEventListener("input", ()=>{
   const it = items.find(i=>i.id===selId);
   if(it){ it.label = tLabel.value; render(); }
@@ -865,8 +896,9 @@ function actualizarStats(){
     const t=TIPOS[it.tipo];
     if(!t) return;
     uso[it.tipo]=(uso[it.tipo]||0)+1;
-    if(t.cat==="sentado"){ sent+=t.seats; if(it.tipo!=="filaSillas") mesas++; }
-    if(t.cat==="pie"){ pie+=t.seats; mesas++; }
+    const nSeats = it.seats || t.seats;
+    if(t.cat==="sentado"){ sent+=nSeats; if(it.tipo!=="filaSillas") mesas++; }
+    if(t.cat==="pie"){ pie+=nSeats; mesas++; }
   });
   const total = sent+pie;
   document.getElementById("stSentados").textContent = sent;
@@ -935,13 +967,15 @@ document.getElementById("btnAuto").onclick = ()=>{
       if(!sec) agregar("barraOro", z.x+2.5, z.y+z.h-1);
     }
     // redondas 150 cm hasta agotar stock; el resto en rectangulares 180×60
-    const nNec = Math.ceil(restante/TIPOS.redonda150.seats);
+    const porMesa = parseInt(document.getElementById("fPorMesa").value)||10;
+    const nNec = Math.ceil(restante/porMesa);
     const nRed = Math.min(nNec, TIPOS.redonda150.stock);
-    const r1 = colocarMesas("redonda150", nRed, z, yIni, z.w>=10);
-    const sentados = r1.colocadas*TIPOS.redonda150.seats;
+    const r1 = colocarMesas("redonda150", nRed, z, yIni, z.w>=10, porMesa);
+    const sentados = r1.colocadas*porMesa;
     if(restante > sentados){
-      const nRect = Math.ceil((restante-sentados)/TIPOS.rect180.seats);
-      colocarMesas("rect180", nRect, z, r1.siguienteY, z.w>=10);
+      const porRect = Math.min(porMesa, TIPOS.rect180.seats);
+      const nRect = Math.ceil((restante-sentados)/porRect);
+      colocarMesas("rect180", nRect, z, r1.siguienteY, z.w>=10, porRect);
     }
     if(sec){
       if(sec.w>=10){ // nivel superior Casabí: lounge completo
@@ -1006,7 +1040,7 @@ document.getElementById("btnAuto").onclick = ()=>{
   selId=null; render();
 };
 
-function colocarMesas(tipo, n, z, inicioY, evitarCentro){
+function colocarMesas(tipo, n, z, inicioY, evitarCentro, seatsPorMesa){
   const t = TIPOS[tipo];
   const diam = (t.d||Math.max(t.w,t.h)) + (t.cat==="sentado"?1.0:0.7); // espacio con sillas + pasillo
   const cols = Math.max(1, Math.floor((z.w-1.2)/diam));
@@ -1018,7 +1052,8 @@ function colocarMesas(tipo, n, z, inicioY, evitarCentro){
     for(let c=0;c<cols && colocadas<n;c++){
       const x = z.x + (z.w - cols*diam)/2 + diam/2 + c*diam;
       if(evitarCentro && Math.hypot(x-cx0,y-cy0) < pista){ continue; }
-      agregar(tipo, x, y);
+      const it = agregar(tipo, x, y);
+      if(seatsPorMesa && seatsPorMesa!==t.seats) it.seats = seatsPorMesa;
       colocadas++;
     }
     fila++;
