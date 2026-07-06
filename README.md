@@ -8,7 +8,7 @@ Herramienta interactiva para diseñar y presentar montajes de eventos a clientes
 |---|---|---|---|
 | **Yaitií** | 30'×15' + anexo 15'×8' | 50 | 2 secciones en L, mismo nivel |
 | **Casabí** | 67'3"×35'7" + nivel sup. 57'6"×15' | 250 | 2 niveles, escalera a 15' del lado izq. (3'6") |
-| **Asua** | 54' × 31'6" | 150 | Rectangular, 1,701 ft² |
+| **Asua** | Forma irregular · 2,600 ft² (útil ~2,210 ft²) | ~170 banquete · ~276 cóctel · ~315 teatro | 4 zonas según plano a escala (1/8"=1', jul 2026): área principal 56'11"×35'7", front desk 18'2"×11'5", ala derecha 14'6"×14'5", franja de entrada 31'8"×5' |
 
 ## Funciones
 
