@@ -18,7 +18,7 @@ Herramienta interactiva para diseñar y presentar montajes de eventos a clientes
 - **Control de aforo en vivo** — asientos sentados, cóctel de pie y alerta si se excede el máximo del salón.
 - **Edición libre** — arrastrar para mover, doble clic para rotar 45°, duplicar, eliminar (tecla Delete).
 - **Número de mesa editable** — al seleccionar una mesa, la barra flotante tiene un campo para ponerle número o etiqueta (VIP, cabecera…), que sale en el plano exportado. El botón **① Enumerar mesas** numera todo el banquete de corrido en orden de filas.
-- **Inventario editable desde la interfaz** — añadir o editar sillas (✎ junto al selector), crear piezas nuevas (＋ nueva) o editar las existentes (✎ en cada tarjeta: medidas, asientos, stock, colores). Las piezas base se pueden restaurar a su valor original.
+- **Inventario editable desde la interfaz** — añadir o editar sillas (✎ junto al selector), crear piezas nuevas (＋ nueva) o editar las existentes (✎ en cada tarjeta: medidas, asientos, stock, colores). Formas disponibles: rectangular, redonda y serpentina/media luna (U). Las piezas base se pueden restaurar a su valor original.
 - **Estilos de montaje propios** — "＋ guardar estilo" convierte el montaje actual en una plantilla con nombre que aparece en la lista de montajes de ese salón. Todo se guarda en el navegador (localStorage), por dispositivo.
 - **Modo presentación** — pantalla limpia para mostrar al cliente en TV o tablet.
 - **Exportar PNG** — plano con membrete del hotel, cliente, fecha, invitados y tipo de silla.

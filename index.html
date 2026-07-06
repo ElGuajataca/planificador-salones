@@ -329,7 +329,8 @@ const TIPOS_BASE = {
   coctel60:{n:"Mesa cóctel 60 cm (YC-T30)", forma:"circ", d:0.6, seats:6, cat:"pie", stock:10, color:"#eef4f3", borde:"#1a6b62"},
   setLounge:{n:"Set lounge dorado 2+1", forma:"rect", w:1.4, h:0.7, seats:2, cat:"sentado", stock:2, color:"#fdf6e8", borde:"#b98a2f"},
   sweetheart:{n:"Mesa novios YC-ST93 200×100", forma:"rect", w:2.0, h:1.0, seats:2, cat:"sentado", stock:1, unLado:true, color:"#fdf6e8", borde:"#b98a2f"},
-  serpentina:{n:"Mesa serpentina YC-T45", forma:"rect", w:2.14, h:0.76, seats:0, cat:"area", stock:4, color:"#f6efe0", borde:"#b98a2f"},
+  // YC-T45: media luna de 760 mm de fondo, 2139 mm de diámetro exterior
+  serpentina:{n:"Mesa serpentina YC-T45", forma:"serpentina", d:2.14, prof:0.76, seats:0, cat:"area", stock:4, color:"#f6efe0", borde:"#b98a2f"},
   bizcocho:{n:"Mesa bizcocho 80 cm", forma:"circ", d:0.8, seats:0, cat:"area", stock:1, color:"#fdf6e8", borde:"#b98a2f"},
   barraOro:{n:"Barra dorada 240 cm (YC-ST105)", forma:"rect", w:2.4, h:0.6, seats:0, cat:"area", stock:2, color:"#123f3b", borde:"#b98a2f", texto:"#fff"},
   buffetPl:{n:"Mesa buffet plegable", forma:"rect", w:1.8, h:0.76, seats:0, cat:"area", stock:2, color:"#f6efe0", borde:"#b98a2f"},
@@ -408,6 +409,8 @@ function construirPaleta(){
     d.className = "pieza";
     const mini = t.forma==="circ"
       ? `<svg width="34" height="26"><circle cx="17" cy="13" r="10" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6"/></svg>`
+      : t.forma==="serpentina"
+      ? `<svg width="34" height="26"><path d="M 5 20 A 12 12 0 0 1 29 20 L 24 20 A 7 7 0 0 0 10 20 Z" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6" stroke-linejoin="round"/></svg>`
       : `<svg width="34" height="26"><rect x="4" y="7" width="26" height="12" rx="2" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6"/></svg>`;
     d.innerHTML = `${mini}<div class="n">${t.n}</div><div class="c" id="stk-${id}">${t.seats?t.seats+" pax":"—"}${t.stock?" · "+t.stock+" uds":""}</div><button class="edit" title="Editar esta pieza">✎</button>`;
     d.onclick = ()=>agregar(id);
@@ -472,8 +475,9 @@ function editarPieza(id){
     <div class="campos">
       <div class="full"><label>Nombre</label><input id="mpN" value="${(t.n||"").replace(/"/g,"&quot;")}"></div>
       <div><label>Forma</label><select id="mpForma">
-        <option value="rect" ${t.forma!=="circ"?"selected":""}>Rectangular</option>
+        <option value="rect" ${t.forma!=="circ"&&t.forma!=="serpentina"?"selected":""}>Rectangular</option>
         <option value="circ" ${t.forma==="circ"?"selected":""}>Redonda</option>
+        <option value="serpentina" ${t.forma==="serpentina"?"selected":""}>Serpentina / media luna (U)</option>
       </select></div>
       <div><label>Categoría</label><select id="mpCat">
         <option value="sentado" ${t.cat==="sentado"?"selected":""}>Sentado (mesa)</option>
@@ -482,7 +486,7 @@ function editarPieza(id){
       </select></div>
       <div id="mpDiamW"><label>Diámetro (cm)</label><input id="mpD" type="number" min="10" value="${Math.round((t.d||1.5)*100)}"></div>
       <div id="mpAnchoW"><label>Ancho (cm)</label><input id="mpW" type="number" min="10" value="${Math.round((t.w||1.8)*100)}"></div>
-      <div id="mpFondoW"><label>Fondo (cm)</label><input id="mpH" type="number" min="10" value="${Math.round((t.h||0.6)*100)}"></div>
+      <div id="mpFondoW"><label>Fondo (cm)</label><input id="mpH" type="number" min="10" value="${Math.round((t.h||t.prof||0.6)*100)}"></div>
       <div><label>Asientos</label><input id="mpSeats" type="number" min="0" value="${t.seats||0}"></div>
       <div><label>Stock (vacío = alquiler)</label><input id="mpStock" type="number" min="0" value="${t.stock||""}"></div>
       <div><label>Color</label><input id="mpColor" type="color" value="${t.color||"#ffffff"}" style="padding:.1rem;height:2rem"></div>
@@ -495,10 +499,10 @@ function editarPieza(id){
       <button class="btn" id="mpOk">Guardar</button>
     </div>`);
   const syncForma = ()=>{
-    const circ = document.getElementById("mpForma").value==="circ";
-    document.getElementById("mpDiamW").style.display = circ?"":"none";
-    document.getElementById("mpAnchoW").style.display = circ?"none":"";
-    document.getElementById("mpFondoW").style.display = circ?"none":"";
+    const f = document.getElementById("mpForma").value;
+    document.getElementById("mpDiamW").style.display  = f==="rect"?"none":"";        // diámetro: redonda y serpentina
+    document.getElementById("mpAnchoW").style.display = f==="rect"?"":"none";        // ancho: solo rectangular
+    document.getElementById("mpFondoW").style.display = f==="circ"?"none":"";        // fondo: rectangular y serpentina
   };
   document.getElementById("mpForma").onchange = syncForma; syncForma();
   document.getElementById("mpCancel").onclick = cerrarModal;
@@ -522,6 +526,10 @@ function editarPieza(id){
       color: document.getElementById("mpColor").value,
       borde: document.getElementById("mpBorde").value};
     if(forma==="circ"){ nt.d = Math.max(10, parseInt(document.getElementById("mpD").value)||150)/100; }
+    else if(forma==="serpentina"){
+      nt.d = Math.max(30, parseInt(document.getElementById("mpD").value)||214)/100;
+      nt.prof = Math.max(10, parseInt(document.getElementById("mpH").value)||76)/100;
+    }
     else { nt.w = Math.max(10, parseInt(document.getElementById("mpW").value)||180)/100;
            nt.h = Math.max(10, parseInt(document.getElementById("mpH").value)||60)/100; }
     const st = parseInt(document.getElementById("mpStock").value);
@@ -735,6 +743,18 @@ function dibujarItem(it){
       for(let i=0;i<t.seats;i++){
         const a = i/t.seats*2*Math.PI;
         grp.appendChild(el("circle",{cx:Math.cos(a)*(r+escala*.22), cy:Math.sin(a)*(r+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
+      }
+    }
+  } else if(t.forma==="serpentina"){
+    // media luna (media corona): arco exterior d/2, banda de fondo 'prof'
+    const R = t.d/2*escala, ri = Math.max(3, R-(t.prof||0.76)*escala), dy = R/2;
+    grp.appendChild(el("path",{
+      d:`M ${-R} ${dy} A ${R} ${R} 0 0 1 ${R} ${dy} L ${ri} ${dy} A ${ri} ${ri} 0 0 0 ${-ri} ${dy} Z`,
+      fill:t.color, stroke:seleccionado?"#b98a2f":t.borde,"stroke-width":seleccionado?3:1.8,"stroke-linejoin":"round"}));
+    if(t.seats>0 && t.cat==="sentado"){ // sillas por el arco exterior
+      for(let i=0;i<t.seats;i++){
+        const a = Math.PI + (i+0.5)/t.seats*Math.PI;
+        grp.appendChild(el("circle",{cx:Math.cos(a)*(R+escala*.22), cy:dy+Math.sin(a)*(R+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
       }
     }
   } else {
