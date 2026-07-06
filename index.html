@@ -376,7 +376,8 @@ const ESTILOS_BASE = [
 
 /* ================= ESTADO ================= */
 let salonId = "casabi";
-let items = [];            // {id,tipo,x,y,rot,label}
+let items = [];            // {id,tipo,x,y,rot,label} — montaje del salón activo
+const itemsPorSalon = {};  // cada salón conserva su propio montaje
 let nextId = 1;
 let selId = null;
 let escala = 40;           // px por metro (recalculado)
@@ -390,7 +391,9 @@ Object.entries(SALONES).forEach(([id,s])=>{
   b.className = "room-btn"+(id===salonId?" activo":"");
   b.innerHTML = `${s.nombre}<small>hasta ${s.aforo} personas${s.nota?" · "+s.nota:""}</small>`;
   b.onclick = ()=>{
+    itemsPorSalon[salonId] = items;        // guardar el montaje del salón actual
     salonId = id;
+    items = itemsPorSalon[id] || [];       // restaurar el del salón destino
     document.querySelectorAll(".room-btn").forEach(x=>x.classList.remove("activo"));
     b.classList.add("activo");
     selId = null;
@@ -623,6 +626,7 @@ function agregar(tipo, x, y){
 
 /* ================= RENDER ================= */
 function render(){
+  itemsPorSalon[salonId] = items; // mantener el montaje ligado a su salón
   const s = SALONES[salonId];
   const bb = bboxSalon(s);
   const area = document.getElementById("canvasArea");
@@ -1088,6 +1092,7 @@ document.getElementById("fileCargar").onchange = e=>{
   r.onload = ()=>{
     try{
       const d = JSON.parse(r.result);
+      itemsPorSalon[salonId] = items; // conservar el montaje del salón actual
       salonId = d.salonId in SALONES ? d.salonId : salonId;
       items = (d.items||[]).filter(i=>TIPOS[i.tipo]);
       nextId = Math.max(1,...items.map(i=>i.id+1));
