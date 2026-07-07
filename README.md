@@ -6,7 +6,7 @@ Herramienta interactiva para diseñar y presentar montajes de eventos a clientes
 
 | Salón | Medidas | Aforo | Configuración |
 |---|---|---|---|
-| **Yaitií** | 30'×15' + anexo 15'×8' | 50 | 2 secciones en L, mismo nivel |
+| **Yaitií** | Forma irregular · 903 ft² (útil ~767 ft²) | ~59 banquete · ~95 cóctel · ~109 teatro | Área única continua según plano a escala (3/16"=1', jul 2026); pared norte de cristales; puertas: doble 6'10" hacia Casabí (pared der.) y doble 58" al lobby viejo (inferior) |
 | **Casabí** | 67'3"×35'7" + nivel sup. 57'6"×15' | 250 | 2 niveles, escalera a 15' del lado izq. (3'6") |
 | **Asua** | Forma irregular · 2,600 ft² (útil ~2,210 ft²) | ~170 banquete · ~276 cóctel · ~315 teatro | Área única continua según plano a escala (1/8"=1', jul 2026), contorno exterior 56'11" de ancho; puertas marcadas: sencilla 3' junto al front desk y doble de 8' en la entrada (a 1'6" del borde derecho) |
 
