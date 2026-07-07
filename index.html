@@ -317,12 +317,35 @@ const SALONES = {
       Z(0, 5.49,  7.39, 2.99, "", false),
       Z(0, 8.48,  5.61, 0.99, "", false)
     ]},
-  casabi:{nombre:"Salón Casabí", aforo:250, nota:"2 niveles",
-    dim:"Nivel bajo 67'3\" × 35'7\" (h 11') · Nivel superior 57'6\" × 15' (h 8'10\")",
-    escalera:{x:4.57, w:1.07}, // a 15' del lado izquierdo, ancho 3.5'
+  /* Casabí según plano a escala 3/32"=1' (julio 2026). Dos niveles
+     pegados sin separación: superior 61'9"×13'6" (834 ft²) e inferior
+     64'6"×35'6" (2,290 ft²), desplazado 6'3" a la derecha — el superior
+     termina en el borde izquierdo de la puerta con marco de 9'; sobre
+     los 9' restantes hay un vacío. La escalera de 5' baja del superior
+     y entra 3' al inferior. Último tramo superior 24'8½" derivado del
+     total 61'9"; ajuste de 1'3½" en esq. inf-izq. — verificar en sitio. */
+  casabi:{nombre:"Salón Casabí", aforo:203, nota:"2 niveles",
+    dim:"Inferior 2,290 ft² + superior 834 ft² · Banquete ~203 · Cóctel ~331 · Teatro ~379",
+    contornos:[
+      [[0,0],[18.82,0],[18.82,4.11],[0,4.11]],               // nivel superior
+      [[1.91,4.11],[21.57,4.11],[21.57,14.93],[1.91,14.93]]  // nivel inferior
+    ],
+    escaleraBox:{x:7.24, y:4.11, w:1.52, h:0.91}, // 5' de ancho, entra 3'
+    puertas:[
+      {x:1.35,  y:0,     w:0.88, abertura:true},                              // abertura 34½" tope sup.
+      {x:9.03,  y:0,     w:2.26, doble:true,    abre:1,  nombre:"cocina"},    // doble 89"
+      {x:18.82, y:0.09,  w:1.83, vert:true,     abre:-1, nombre:"entrada"},   // 6' pared der. sup.
+      {x:0,     y:2.49,  w:1.63, vert:true,     abre:1,  nombre:"salida"},    // 64" pared izq. sup.
+      {x:18.82, y:4.11,  w:2.74, abertura:true, nombre:"puerta con marco 9'"},
+      {x:1.99,  y:14.93, w:0.91, abre:1,        nombre:"salida"}              // 36", abre hacia afuera
+    ],
+    rotulos:[
+      {x:0.35,  y:0.62, t:"Nivel superior · 61'9\" × 13'6\" · 834 ft²"},
+      {x:11.74, y:9.9,  t:"Nivel inferior · 64'6\" × 35'6\" · 2,290 ft²", centrado:true}
+    ],
     zonas:[
-      Z(0, 0,    17.53, 4.57, "Nivel superior · 57'6\" × 15' · techo 8'10\"", false),
-      Z(0, 5.37, 20.50, 10.85,"Nivel bajo · 67'3\" × 35'7\" · techo 11'", true)
+      Z(1.91, 4.11, 19.66, 10.82, "", true),
+      Object.assign(Z(0, 0, 18.82, 4.11, "", false), {lounge:true})
     ]},
   /* Asua según plano a escala 1/8"=1' (julio 2026). Forma irregular:
      el nicho superior central es la cocina/barra (no es salón).
@@ -345,7 +368,8 @@ const SALONES = {
     ],
     zonas:[Z(0, 4.39, 17.35, 10.85, "", true)]},
 };
-function bboxSalon(s){let w=0,h=0;s.zonas.forEach(z=>{w=Math.max(w,z.x+z.w);h=Math.max(h,z.y+z.h)});if(s.contorno)s.contorno.forEach(p=>{w=Math.max(w,p[0]);h=Math.max(h,p[1])});return{w,h};}
+function polisDe(s){return s.contornos || (s.contorno ? [s.contorno] : null);}
+function bboxSalon(s){let w=0,h=0;s.zonas.forEach(z=>{w=Math.max(w,z.x+z.w);h=Math.max(h,z.y+z.h)});(polisDe(s)||[]).forEach(poly=>poly.forEach(p=>{w=Math.max(w,p[0]);h=Math.max(h,p[1])}));return{w,h};}
 function zonaPrincipal(s){return s.zonas.find(z=>z.principal)||s.zonas[0];}
 
 /* ================= CATÁLOGO · INVENTARIO REAL DEL HOTEL =================
@@ -666,24 +690,42 @@ function render(){
   svg.setAttribute("viewBox",`-2 -2 ${W+4} ${H+4}`);
   svg.innerHTML = "";
 
-  if(s.contorno){
-    // salón de contorno continuo: cuadrícula global recortada al polígono
-    // y un solo borde exterior, sin divisiones interiores
-    const pts = s.contorno.map(p=>`${p[0]*escala},${p[1]*escala}`).join(" ");
+  const polys = polisDe(s);
+  if(polys){
+    // salón de contorno continuo (1 o más niveles): cuadrícula global
+    // recortada a los polígonos y solo bordes exteriores, sin divisiones
+    const ptsDe = poly => poly.map(p=>`${p[0]*escala},${p[1]*escala}`).join(" ");
     const defs = el("defs",{});
     const clip = el("clipPath",{id:"clipSalon"});
-    clip.appendChild(el("polygon",{points:pts}));
+    polys.forEach(poly=>clip.appendChild(el("polygon",{points:ptsDe(poly)})));
     defs.appendChild(clip);
     svg.appendChild(defs);
     const g = el("g",{opacity:.55,"clip-path":"url(#clipSalon)"});
     for(let i=1;i<bb.w;i++) g.appendChild(el("line",{x1:i*escala,y1:0,x2:i*escala,y2:H,stroke:"#eee6d6","stroke-width":1}));
     for(let j=1;j<bb.h;j++) g.appendChild(el("line",{x1:0,y1:j*escala,x2:W,y2:j*escala,stroke:"#eee6d6","stroke-width":1}));
     svg.appendChild(g);
-    svg.appendChild(el("polygon",{points:pts,fill:"none",stroke:"#0e4a45","stroke-width":3,"stroke-linejoin":"round"}));
+    polys.forEach(poly=>svg.appendChild(el("polygon",{points:ptsDe(poly),fill:"none",stroke:"#0e4a45","stroke-width":3,"stroke-linejoin":"round"})));
     // puertas: abertura + hoja(s) + arco de giro; en muro horizontal
     // (abre=±1 en Y) o vertical con vert:true (abre=±1 en X)
     (s.puertas||[]).forEach(p=>{
       const d=p.abre, trazo={fill:"none",stroke:"#0e4a45","stroke-width":1.2,opacity:.7};
+      if(p.abertura){ // abertura sin hoja: hueco en el muro + jambas
+        if(p.vert){
+          const y1=p.y*escala, y2=(p.y+p.w)*escala, x=p.x*escala;
+          svg.appendChild(el("line",{x1:x,y1:y1,x2:x,y2:y2,stroke:"#fdfcf9","stroke-width":5}));
+          [y1,y2].forEach(yy=>svg.appendChild(el("line",{x1:x-4,y1:yy,x2:x+4,y2:yy,stroke:"#0e4a45","stroke-width":1.6})));
+        } else {
+          const x1=p.x*escala, x2=(p.x+p.w)*escala, y=p.y*escala;
+          svg.appendChild(el("line",{x1:x1,y1:y,x2:x2,y2:y,stroke:"#fdfcf9","stroke-width":5}));
+          [x1,x2].forEach(xx=>svg.appendChild(el("line",{x1:xx,y1:y-4,x2:xx,y2:y+4,stroke:"#0e4a45","stroke-width":1.6})));
+          if(p.nombre){
+            const t = el("text",{x:(x1+x2)/2,y:y+14,"text-anchor":"middle",fill:"#0e4a45","font-family":"Outfit,sans-serif","font-size":Math.max(9,escala*.22),"font-weight":"600",opacity:.75});
+            t.textContent = p.nombre;
+            svg.appendChild(t);
+          }
+        }
+        return;
+      }
       if(p.vert){
         const y1=p.y*escala, y2=(p.y+p.w)*escala, x=p.x*escala, m=(y1+y2)/2;
         svg.appendChild(el("line",{x1:x,y1:y1,x2:x,y2:y2,stroke:"#fdfcf9","stroke-width":5}));
@@ -727,6 +769,18 @@ function render(){
         svg.appendChild(t);
       }
     });
+    // escalera entre niveles: abre el muro compartido y baja con peldaños
+    if(s.escaleraBox){
+      const e=s.escaleraBox, ex=e.x*escala, ey=e.y*escala, ew=e.w*escala, eh=e.h*escala;
+      svg.appendChild(el("line",{x1:ex,y1:ey,x2:ex+ew,y2:ey,stroke:"#fdfcf9","stroke-width":5}));
+      svg.appendChild(el("rect",{x:ex,y:ey,width:ew,height:eh,fill:"#f6efe0",stroke:"#b98a2f","stroke-width":1.5}));
+      for(let i=1;i<5;i++)
+        svg.appendChild(el("line",{x1:ex,y1:ey+eh*i/5,x2:ex+ew,y2:ey+eh*i/5,stroke:"#b98a2f","stroke-width":1}));
+      svg.appendChild(el("line",{x1:ex+ew/2,y1:ey+3,x2:ex+ew/2,y2:ey+eh-3,stroke:"#b98a2f","stroke-width":1.4}));
+      const te = el("text",{x:ex+ew/2,y:ey+eh+12,"text-anchor":"middle",fill:"#b98a2f","font-family":"Outfit,sans-serif","font-size":Math.max(9,escala*.2)});
+      te.textContent = "escalera 5' · baja";
+      svg.appendChild(te);
+    }
     // rótulos fijos del plano
     (s.rotulos||[]).forEach(rt=>{
       const t = el("text",{x:rt.x*escala,y:rt.y*escala,fill:"#0e4a45","font-family":"Outfit,sans-serif","font-size":Math.max(10,escala*.28),"font-weight":"500",opacity:.6});
@@ -1016,14 +1070,24 @@ document.getElementById("btnAuto").onclick = ()=>{
       const r2 = colocarMesas("rect180", Math.ceil((restante-colocados)/porRect), z, r1.siguienteY, grande, porRect);
       colocados += r2.colocadas*porRect;
     }
-    if(s.contorno){
-      // área continua: seguir llenando las demás franjas con mesas
+    if(s.contorno || s.contornos){
+      // área continua: llenar las demás franjas/niveles con mesas; si un
+      // nivel es lounge y ya todos caben, montarlo como lounge
       for(const zn of s.zonas){
-        if(zn.principal || colocados>=restante || zn.h<2.3) continue;
+        if(zn.principal) continue;
+        if(zn.lounge && zn.w>=10 && colocados>=restante){
+          agregar("barraOro", zn.x+2.2, zn.y+zn.h/2);
+          agregar("setLounge", zn.x+5, zn.y+zn.h/2);
+          agregar("setLounge", zn.x+7.2, zn.y+zn.h/2);
+          for(let i=0;i<3;i++) agregar("coctel60", zn.x+9.5+i*2.2, zn.y+zn.h/2);
+          agregar("buffetPl", zn.x+zn.w-1.6, zn.y+zn.h/2).rot=90;
+          continue;
+        }
+        if(colocados>=restante || zn.h<2.3) continue;
         const usadas = items.filter(i=>i.tipo==="redonda150").length;
         const disp = Math.max(0, TIPOS.redonda150.stock - usadas);
         const n = Math.min(Math.ceil((restante-colocados)/porMesa), disp);
-        if(!n) break;
+        if(!n) continue;
         const rz = colocarMesas("redonda150", n, zn, 0.15, false, porMesa);
         colocados += rz.colocadas*porMesa;
       }
