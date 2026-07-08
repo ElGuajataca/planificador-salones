@@ -952,7 +952,7 @@ function dibujarItem(it){
     if(nSeats>0 && t.cat==="sentado" && !t.silla){
       for(let i=0;i<nSeats;i++){
         const a = i/nSeats*2*Math.PI;
-        grp.appendChild(el("circle",{cx:Math.cos(a)*(r+escala*.22), cy:Math.sin(a)*(r+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
+        grp.appendChild(el("circle",{cx:Math.cos(a)*(r+escala*.26), cy:Math.sin(a)*(r+escala*.26), r:escala*.225, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
       }
     }
   } else if(t.forma==="poly" && t.pts){
@@ -969,7 +969,7 @@ function dibujarItem(it){
     if(nSeats>0 && t.cat==="sentado"){ // sillas por el arco exterior
       for(let i=0;i<nSeats;i++){
         const a = Math.PI + (i+0.5)/nSeats*Math.PI;
-        grp.appendChild(el("circle",{cx:Math.cos(a)*(R+escala*.22), cy:dy+Math.sin(a)*(R+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
+        grp.appendChild(el("circle",{cx:Math.cos(a)*(R+escala*.26), cy:dy+Math.sin(a)*(R+escala*.26), r:escala*.225, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
       }
     }
   } else {
@@ -983,15 +983,15 @@ function dibujarItem(it){
       if(t.unLado){ // ambas sillas del mismo lado (mesa de novios, de frente a los invitados)
         for(let i=0;i<nSeats;i++){
           const px = -w/2 + w*(i+.5)/nSeats;
-          grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
+          grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.26,r:escala*.225,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
         }
       } else {
         const porLado = Math.ceil(nSeats/2);
         for(let i=0;i<porLado;i++){
           const px = -w/2 + w*(i+.5)/porLado;
-          grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
+          grp.appendChild(el("circle",{cx:px,cy:-h/2-escala*.26,r:escala*.225,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
           if(i + porLado < nSeats)
-            grp.appendChild(el("circle",{cx:px,cy:h/2+escala*.2,r:escala*.13,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
+            grp.appendChild(el("circle",{cx:px,cy:h/2+escala*.26,r:escala*.225,fill:"#e9efee",stroke:t.borde,"stroke-width":1}));
         }
       }
     }
