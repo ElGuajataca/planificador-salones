@@ -467,6 +467,8 @@ function construirPaleta(){
       ? `<svg width="34" height="26"><circle cx="17" cy="13" r="10" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6"/></svg>`
       : t.forma==="serpentina"
       ? `<svg width="34" height="26"><path d="M 5 20 A 12 12 0 0 1 29 20 L 24 20 A 7 7 0 0 0 10 20 Z" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6" stroke-linejoin="round"/></svg>`
+      : t.forma==="poly" && t.pts
+      ? `<svg width="34" height="26"><polygon points="${t.pts.map(p=>`${4+p[0]*26},${3+p[1]*20}`).join(" ")}" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6" stroke-linejoin="round"/></svg>`
       : `<svg width="34" height="26"><rect x="4" y="7" width="26" height="12" rx="2" fill="${t.color}" stroke="${t.borde}" stroke-width="1.6"/></svg>`;
     d.innerHTML = `${mini}<div class="n">${t.n}</div><div class="c" id="stk-${id}">${t.seats?t.seats+" pax":"—"}${t.stock?" · "+t.stock+" uds":""}</div><button class="edit" title="Editar esta pieza">✎</button>`;
     d.onclick = ()=>agregar(id);
@@ -531,9 +533,10 @@ function editarPieza(id){
     <div class="campos">
       <div class="full"><label>Nombre</label><input id="mpN" value="${(t.n||"").replace(/"/g,"&quot;")}"></div>
       <div><label>Forma</label><select id="mpForma">
-        <option value="rect" ${t.forma!=="circ"&&t.forma!=="serpentina"?"selected":""}>Rectangular</option>
+        <option value="rect" ${t.forma!=="circ"&&t.forma!=="serpentina"&&t.forma!=="poly"?"selected":""}>Rectangular</option>
         <option value="circ" ${t.forma==="circ"?"selected":""}>Redonda</option>
         <option value="serpentina" ${t.forma==="serpentina"?"selected":""}>Serpentina / media luna (U)</option>
+        <option value="poly" ${t.forma==="poly"?"selected":""}>Personalizada · dibujar forma</option>
       </select></div>
       <div><label>Categoría</label><select id="mpCat">
         <option value="sentado" ${t.cat==="sentado"?"selected":""}>Sentado (mesa)</option>
@@ -547,6 +550,15 @@ function editarPieza(id){
       <div><label>Stock (vacío = alquiler)</label><input id="mpStock" type="number" min="0" value="${t.stock||""}"></div>
       <div><label>Color</label><input id="mpColor" type="color" value="${t.color||"#ffffff"}" style="padding:.1rem;height:2rem"></div>
       <div><label>Borde</label><input id="mpBorde" type="color" value="${t.borde||"#0e4a45"}" style="padding:.1rem;height:2rem"></div>
+      <div class="full" id="mpPolyW" style="display:none">
+        <label>Dibuja la silueta · clic para añadir cada esquina (mín. 3)</label>
+        <svg id="mpPad" viewBox="0 0 300 170" style="width:100%;height:170px;border:1px solid var(--linea);border-radius:.4rem;background:#fff;touch-action:none;cursor:crosshair;display:block"></svg>
+        <div style="display:flex;gap:.35rem;margin-top:.35rem">
+          <button class="h3-btn" id="mpUndo" type="button">↩ deshacer esquina</button>
+          <button class="h3-btn" id="mpClear" type="button">✕ borrar todo</button>
+          <span style="font-size:.66rem;color:#8a8478;margin-left:auto">La silueta se escala al ancho × fondo indicados</span>
+        </div>
+      </div>
     </div>
     <div class="fila-btn">
       ${id && !esBase ? '<button class="btn peligro" id="mpDel">Eliminar</button>' : ''}
@@ -556,11 +568,39 @@ function editarPieza(id){
     </div>`);
   const syncForma = ()=>{
     const f = document.getElementById("mpForma").value;
-    document.getElementById("mpDiamW").style.display  = f==="rect"?"none":"";        // diámetro: redonda y serpentina
-    document.getElementById("mpAnchoW").style.display = f==="rect"?"":"none";        // ancho: solo rectangular
-    document.getElementById("mpFondoW").style.display = f==="circ"?"none":"";        // fondo: rectangular y serpentina
+    document.getElementById("mpDiamW").style.display  = (f==="circ"||f==="serpentina")?"":"none";
+    document.getElementById("mpAnchoW").style.display = (f==="rect"||f==="poly")?"":"none";
+    document.getElementById("mpFondoW").style.display = f==="circ"?"none":"";
+    document.getElementById("mpPolyW").style.display  = f==="poly"?"":"none";
   };
   document.getElementById("mpForma").onchange = syncForma; syncForma();
+
+  // lienzo de la forma personalizada
+  let padPts = (t.forma==="poly" && t.pts) ? t.pts.map(p=>[p[0],p[1]]) : [];
+  const pad = document.getElementById("mpPad");
+  const pintarPad = ()=>{
+    let sv = "";
+    for(let i=1;i<10;i++) sv += `<line x1="${i*30}" y1="0" x2="${i*30}" y2="170" stroke="#eee6d6"/><line x1="0" y1="${i*17}" x2="300" y2="${i*17}" stroke="#eee6d6"/>`;
+    if(padPts.length){
+      const pv = padPts.map(p=>`${p[0]*300},${p[1]*170}`).join(" ");
+      sv += padPts.length>2
+        ? `<polygon points="${pv}" fill="#f6efe0" stroke="#0e4a45" stroke-width="2" stroke-linejoin="round"/>`
+        : `<polyline points="${pv}" fill="none" stroke="#0e4a45" stroke-width="2"/>`;
+      padPts.forEach(p=>sv+=`<circle cx="${p[0]*300}" cy="${p[1]*170}" r="4" fill="#b98a2f"/>`);
+    }
+    pad.innerHTML = sv;
+  };
+  pad.addEventListener("pointerdown", e=>{
+    e.preventDefault();
+    const r = pad.getBoundingClientRect();
+    const px = Math.min(1, Math.max(0, (e.clientX-r.left)/r.width));
+    const py = Math.min(1, Math.max(0, (e.clientY-r.top)/r.height));
+    padPts.push([Math.round(px*40)/40, Math.round(py*40)/40]); // ajuste fino a cuadrícula
+    pintarPad();
+  });
+  document.getElementById("mpUndo").onclick = ()=>{ padPts.pop(); pintarPad(); };
+  document.getElementById("mpClear").onclick = ()=>{ padPts = []; pintarPad(); };
+  pintarPad();
   document.getElementById("mpCancel").onclick = cerrarModal;
   if(document.getElementById("mpDel")) document.getElementById("mpDel").onclick = ()=>{
     if(!confirm("¿Eliminar esta pieza? Se quitará también del plano.")) return;
@@ -585,6 +625,15 @@ function editarPieza(id){
     else if(forma==="serpentina"){
       nt.d = Math.max(30, parseInt(document.getElementById("mpD").value)||214)/100;
       nt.prof = Math.max(10, parseInt(document.getElementById("mpH").value)||76)/100;
+    }
+    else if(forma==="poly"){
+      if(padPts.length<3){ alert("Dibuja la silueta con al menos 3 esquinas."); return; }
+      nt.w = Math.max(10, parseInt(document.getElementById("mpW").value)||100)/100;
+      nt.h = Math.max(10, parseInt(document.getElementById("mpH").value)||100)/100;
+      // normalizar la silueta para que llene exactamente ancho × fondo
+      const xs = padPts.map(p=>p[0]), ys = padPts.map(p=>p[1]);
+      const mx = Math.min(...xs), Mx = Math.max(...xs), my = Math.min(...ys), My = Math.max(...ys);
+      nt.pts = padPts.map(p=>[(p[0]-mx)/Math.max(.01,Mx-mx), (p[1]-my)/Math.max(.01,My-my)]);
     }
     else { nt.w = Math.max(10, parseInt(document.getElementById("mpW").value)||180)/100;
            nt.h = Math.max(10, parseInt(document.getElementById("mpH").value)||60)/100; }
@@ -857,6 +906,11 @@ function dibujarItem(it){
         grp.appendChild(el("circle",{cx:Math.cos(a)*(r+escala*.22), cy:Math.sin(a)*(r+escala*.22), r:escala*.14, fill:"#e9efee", stroke:t.borde,"stroke-width":1}));
       }
     }
+  } else if(t.forma==="poly" && t.pts){
+    // forma personalizada: silueta normalizada 0..1 escalada a w × h, centrada
+    const w = t.w*escala, h = t.h*escala;
+    const pv = t.pts.map(p=>`${(p[0]-0.5)*w},${(p[1]-0.5)*h}`).join(" ");
+    grp.appendChild(el("polygon",{points:pv, fill:t.color, stroke:seleccionado?"#b98a2f":t.borde,"stroke-width":seleccionado?3:1.8,"stroke-linejoin":"round"}));
   } else if(t.forma==="serpentina"){
     // media luna (media corona): arco exterior d/2, banda de fondo 'prof'
     const R = t.d/2*escala, ri = Math.max(3, R-(t.prof||0.76)*escala), dy = R/2;
